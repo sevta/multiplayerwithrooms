@@ -100,26 +100,40 @@ io.on('connection' , socket => {
     })
   })
 
+  socket.on('finish' , data => {
+    console.log(data)
+    io.in(data.room_code).emit('finish the game' , {
+      text: `${users[data.socketId].username} has finished the game`
+    })
+  })
+
   socket.on('join room' , data => {
     console.log(data)
     let allrooms = io.sockets.adapter.rooms
     console.log('allrooms' , allrooms)
     if (allrooms[data.room_code]) {
-      socket.join(data.room_code)
-      users[socket.id].username = data.username
-      users[socket.id].is_host = false 
-      users[socket.id].is_join_room = true 
-      users[socket.id].room_code = data.room_code
-      users[socket.id].player = 1
-
-      let usertemp = getClientsInRoom(data.room_code , users)
-      console.log('users', users)
-      console.log('joined' , allrooms)
-      console.log('and users is' , usertemp)
-      io.in(data.room_code).emit('room created' , {
-        text: 'room created',
-        users: usertemp
-      })
+      console.log('rooms length' , allrooms)
+      if (allrooms[data.room_code].length == 4) {
+        socket.emit('room full' , {
+          text: 'room full'
+        })
+      } else {
+        socket.join(data.room_code)
+        users[socket.id].username = data.username
+        users[socket.id].is_host = false 
+        users[socket.id].is_join_room = true 
+        users[socket.id].room_code = data.room_code
+        users[socket.id].player = 1
+  
+        let usertemp = getClientsInRoom(data.room_code , users)
+        console.log('users', users)
+        console.log('joined' , allrooms)
+        console.log('and users is' , usertemp)
+        io.in(data.room_code).emit('room created' , {
+          text: 'room created',
+          users: usertemp
+        })
+      }
     } else {
       socket.emit('room not found' , {
         text: 'room not found'

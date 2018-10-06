@@ -50375,7 +50375,162 @@ uuid.v4 = v4;
 
 module.exports = uuid;
 
-},{"./v1":"..\\..\\node_modules\\uuid\\v1.js","./v4":"..\\..\\node_modules\\uuid\\v4.js"}],"app.js":[function(require,module,exports) {
+},{"./v1":"..\\..\\node_modules\\uuid\\v1.js","./v4":"..\\..\\node_modules\\uuid\\v4.js"}],"component\\typeracer.js":[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var TypeRacer = function (_Component) {
+  _inherits(TypeRacer, _Component);
+
+  function TypeRacer(props) {
+    _classCallCheck(this, TypeRacer);
+
+    var _this = _possibleConstructorReturn(this, (TypeRacer.__proto__ || Object.getPrototypeOf(TypeRacer)).call(this, props));
+
+    _this._type = function (e) {
+      var _this$state = _this.state,
+          value = _this$state.value,
+          currentWord = _this$state.currentWord;
+
+      var val = e.target.value;
+      var key = e.target.name;
+      console.log(val == " ");
+      _this.setState(_defineProperty({}, key, val), function () {});
+    };
+
+    _this._press = function (e) {
+      var _this$state2 = _this.state,
+          currentWord = _this$state2.currentWord,
+          value = _this$state2.value;
+
+      console.log(e.key);
+      if (e.key == ' ') {
+        if (value == currentWord) {
+          _this.setState({ value: '' });
+          _this.nextQuestion();
+        } else {
+          alert('bail');
+        }
+      }
+    };
+
+    _this.state = {
+      words: 'tesi mandi di atap',
+      extractWords: [],
+      lenWords: null,
+      currentPosition: 0,
+      currentWord: '',
+      value: ''
+    };
+    return _this;
+  }
+
+  _createClass(TypeRacer, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      var _this2 = this;
+
+      var extract = this.state.words.split(" ");
+      this.state.extractWords = [].concat(_toConsumableArray(extract));
+      this.setState({
+        extractWords: this.state.extractWords,
+        lenWords: this.state.extractWords.length,
+        currentWord: this.state.extractWords[this.state.currentPosition]
+      }, function () {
+        return console.log(_this2.state);
+      });
+    }
+  }, {
+    key: 'nextQuestion',
+    value: function nextQuestion() {
+      var _this3 = this;
+
+      var _state = this.state,
+          currentPosition = _state.currentPosition,
+          currentWord = _state.currentWord;
+
+      if (this.state.currentPosition == this.state.extractWords.length - 1) {
+        this.setState({ currentWord: 'FINISHED' }, function () {
+          return _this3.props.onFinished();
+        });
+      } else {
+        this.state.currentPosition = this.state.currentPosition + 1;
+        this.setState({
+          currentPosition: this.state.currentPosition,
+          currentWord: this.state.extractWords[this.state.currentPosition],
+          value: ''
+        });
+      }
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _state2 = this.state,
+          words = _state2.words,
+          currentWord = _state2.currentWord,
+          value = _state2.value;
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'container' },
+        _react2.default.createElement(
+          'div',
+          { className: 'row' },
+          _react2.default.createElement(
+            'div',
+            { className: 'col' },
+            _react2.default.createElement(
+              'h3',
+              null,
+              'tesi is typeracer'
+            ),
+            _react2.default.createElement(
+              'h1',
+              null,
+              currentWord
+            ),
+            _react2.default.createElement(
+              'div',
+              { className: 'form-group' },
+              _react2.default.createElement('input', { type: 'text', placeholder: 'type', name: 'value', value: value, className: 'form-control', onKeyPress: this._press, onChange: this._type })
+            ),
+            _react2.default.createElement(
+              'h3',
+              null,
+              this.props.notificationText
+            )
+          )
+        )
+      );
+    }
+  }]);
+
+  return TypeRacer;
+}(_react.Component);
+
+exports.default = TypeRacer;
+},{"react":"..\\..\\node_modules\\react\\index.js"}],"app.js":[function(require,module,exports) {
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -50395,6 +50550,10 @@ var _socket2 = _interopRequireDefault(_socket);
 var _uuid = require('uuid');
 
 var _uuid2 = _interopRequireDefault(_uuid);
+
+var _typeracer = require('./component/typeracer');
+
+var _typeracer2 = _interopRequireDefault(_typeracer);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -50423,10 +50582,16 @@ var App = function (_Component) {
       _this.setState({ users: [].concat(_toConsumableArray(data.users)) }, function () {
         return console.log(_this.state);
       });
+
+      /**
+       * masih salah nih disini
+       * kalo user semua udh pada ready langsung kasih main dia 
+       */
       users.map(function (user, index) {
         console.log(user);
         if (user.is_ready == true) {
           console.log('all is allready to game');
+          _this.setState({ inGame: true });
           _this.socket.emit('all allready', {
             roomCode: _this.state.generate_room_code || _this.state.join_room_code,
             text: 'all users ready to play game'
@@ -50489,6 +50654,14 @@ var App = function (_Component) {
       });
     };
 
+    _this.onFinished = function () {
+      _this.socket.emit('finish', {
+        socketId: _this.state.socketId,
+        room_code: _this.state.join_room_code || _this.state.generate_room_code,
+        text: 'finish'
+      });
+    };
+
     _this.state = {
       socketId: null,
       username: '',
@@ -50496,7 +50669,10 @@ var App = function (_Component) {
       join_room: false,
       join_room_code: '',
       users: [],
-      isReady: false
+      isReady: false,
+      inGame: false,
+      isFinish: false,
+      notificationText: ""
     };
 
     _this.socket = (0, _socket2.default)();
@@ -50517,10 +50693,22 @@ var App = function (_Component) {
     _this.socket.on('ready to play', function (data) {
       return console.log(data);
     });
+    _this.socket.on('room full', function (data) {
+      return console.log(data);
+    });
+    _this.socket.on('finish the game', function (data) {
+      return _this.finished(data);
+    });
     return _this;
   }
 
   _createClass(App, [{
+    key: 'finished',
+    value: function finished(data) {
+      console.log(data);
+      this.setState({ isFinish: true, notificationText: data.text });
+    }
+  }, {
     key: 'render',
     value: function render() {
       var _state = this.state,
@@ -50528,82 +50716,91 @@ var App = function (_Component) {
           join_room = _state.join_room,
           users = _state.users,
           isReady = _state.isReady,
-          socketId = _state.socketId;
+          socketId = _state.socketId,
+          inGame = _state.inGame,
+          isFinish = _state.isFinish,
+          notificationText = _state.notificationText;
 
+
+      var waitingRoom = _react2.default.createElement(
+        'div',
+        { className: 'container' },
+        _react2.default.createElement(
+          'div',
+          { className: 'row' },
+          _react2.default.createElement(
+            'div',
+            { className: 'col-6' },
+            _react2.default.createElement(
+              'h1',
+              null,
+              'Tesi aduh real'
+            ),
+            _react2.default.createElement(
+              'p',
+              null,
+              _react2.default.createElement(
+                'b',
+                null,
+                'room code'
+              ),
+              ' ',
+              generate_room_code !== null && generate_room_code
+            ),
+            generate_room_code == null ? _react2.default.createElement(
+              'div',
+              { className: generate_room_code == null ? "form-group" : "form-group hide" },
+              join_room && _react2.default.createElement('input', {
+                type: 'text',
+                className: 'form-control',
+                placeholder: 'room_code',
+                name: 'join_room_code',
+                onKeyPress: this.gotoJoinRoom,
+                onChange: this._onChange }),
+              generate_room_code == null ? _react2.default.createElement('input', {
+                type: 'text',
+                className: 'form-control',
+                placeholder: 'username',
+                name: 'username',
+                onKeyPress: this.handlePress,
+                onChange: this._onChange }) : null
+            ) : null,
+            _react2.default.createElement(
+              'div',
+              { className: 'form-group' },
+              _react2.default.createElement(
+                'button',
+                { className: 'btn btn-primary', onClick: this.submit },
+                'create room'
+              ),
+              _react2.default.createElement(
+                'span',
+                { style: { 'margin': 10 } },
+                'or'
+              ),
+              _react2.default.createElement(
+                'button',
+                { className: 'btn btn-secondary', onClick: this.joinRoom },
+                'join room'
+              )
+            )
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'col-6' },
+            _react2.default.createElement(ListUsers, {
+              users: users,
+              onClick: this.userReady,
+              onHostClick: this.userReady,
+              disabled: isReady,
+              socketId: socketId })
+          )
+        )
+      );
       return _react2.default.createElement(
         'div',
         null,
-        _react2.default.createElement(
-          'div',
-          { className: 'container' },
-          _react2.default.createElement(
-            'div',
-            { className: 'row' },
-            _react2.default.createElement(
-              'div',
-              { className: 'col-6' },
-              _react2.default.createElement(
-                'h1',
-                null,
-                'Tesi aduh real'
-              ),
-              _react2.default.createElement(
-                'p',
-                null,
-                _react2.default.createElement(
-                  'b',
-                  null,
-                  'room code'
-                ),
-                ' ',
-                generate_room_code !== null && generate_room_code
-              ),
-              generate_room_code == null ? _react2.default.createElement(
-                'div',
-                { className: 'form-group' },
-                join_room && _react2.default.createElement('input', {
-                  type: 'text',
-                  className: 'form-control',
-                  placeholder: 'room_code',
-                  name: 'join_room_code',
-                  onKeyPress: this.gotoJoinRoom,
-                  onChange: this._onChange }),
-                generate_room_code == null ? _react2.default.createElement('input', {
-                  type: 'text',
-                  className: 'form-control',
-                  placeholder: 'username',
-                  name: 'username',
-                  onKeyPress: this.handlePress,
-                  onChange: this._onChange }) : null
-              ) : null,
-              _react2.default.createElement(
-                'div',
-                { className: 'form-group' },
-                _react2.default.createElement(
-                  'button',
-                  { className: 'btn btn-primary', onClick: this.submit },
-                  'create room'
-                ),
-                _react2.default.createElement(
-                  'span',
-                  { style: { 'margin': 10 } },
-                  'or'
-                ),
-                _react2.default.createElement(
-                  'button',
-                  { className: 'btn btn-secondary', onClick: this.joinRoom },
-                  'join room'
-                )
-              )
-            )
-          )
-        ),
-        _react2.default.createElement(ListUsers, {
-          users: users,
-          onClick: this.userReady,
-          onHostClick: this.userReady,
-          disabled: isReady,
-          socketId: socketId })
+        inGame ? _react2.default.createElement(_typeracer2.default, { notification: isFinish, notificationText: notificationText, onFinished: this.onFinished }) : waitingRoom
       );
     }
   }]);
@@ -50668,7 +50865,7 @@ var ListUsers = function ListUsers(_ref) {
 
 var roots = document.querySelector('#app');
 _reactDom2.default.render(_react2.default.createElement(App, null), roots);
-},{"react":"..\\..\\node_modules\\react\\index.js","react-dom":"..\\..\\node_modules\\react-dom\\index.js","socket.io-client":"..\\..\\node_modules\\socket.io-client\\lib\\index.js","uuid":"..\\..\\node_modules\\uuid\\index.js"}],"C:\\Users\\sevta\\AppData\\Roaming\\npm\\node_modules\\parcel-bundler\\src\\builtins\\hmr-runtime.js":[function(require,module,exports) {
+},{"react":"..\\..\\node_modules\\react\\index.js","react-dom":"..\\..\\node_modules\\react-dom\\index.js","socket.io-client":"..\\..\\node_modules\\socket.io-client\\lib\\index.js","uuid":"..\\..\\node_modules\\uuid\\index.js","./component/typeracer":"component\\typeracer.js"}],"C:\\Users\\sevta\\AppData\\Roaming\\npm\\node_modules\\parcel-bundler\\src\\builtins\\hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 
@@ -50697,7 +50894,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '58992' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '64855' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 

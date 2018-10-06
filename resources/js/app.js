@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom'
 import io from 'socket.io-client'
 import uuid from 'uuid'
 
+
+import TypeRacer from './component/typeracer'
+
 class App extends Component {
   constructor(props) {
    super(props) 
@@ -13,7 +16,10 @@ class App extends Component {
     join_room: false ,
     join_room_code: '',
     users: [] ,
-    isReady: false
+    isReady: false ,
+    inGame: false ,
+    isFinish: false ,
+    notificationText: ""
    }
 
    this.socket = io()
@@ -22,16 +28,29 @@ class App extends Component {
    this.socket.on('send socketid' , data => this.setState({ socketId: data.socketId } , () => console.log(this.state)))
    this.socket.on('update state' , data => this.updateStateRoom(data))
    this.socket.on('ready to play' , data => console.log(data))
+   this.socket.on('room full' , data => console.log(data))
+   this.socket.on('finish the game' , data => this.finished(data))
+  }
+
+  finished(data) {
+    console.log(data)
+    this.setState({ isFinish: true , notificationText: data.text })
   }
 
   updateStateRoom = data => {
     const { users } = this.state 
     console.log(data)
     this.setState({ users: [...data.users] } , () => console.log(this.state))
+  
+    /**
+     * masih salah nih disini
+     * kalo user semua udh pada ready langsung kasih main dia 
+     */
     users.map((user , index) => {
       console.log(user)
       if (user.is_ready == true) {
         console.log('all is allready to game')
+        this.setState({ inGame: true })
         this.socket.emit('all allready' , {
           roomCode: this.state.generate_room_code || this.state.join_room_code ,
           text: 'all users ready to play game'
@@ -90,52 +109,74 @@ class App extends Component {
     })
   }
 
+  onFinished = () => {
+    this.socket.emit('finish' , {
+      socketId: this.state.socketId ,
+      room_code: this.state.join_room_code || this.state.generate_room_code ,
+      text: 'finish'
+    })
+  }
 
   render() {
-    const { generate_room_code , join_room , users , isReady , socketId } = this.state 
-    return (
-      <div>
-        <div className="container">
-          <div className="row">
-            <div className="col-6">
-              <h1>Tesi aduh real</h1>
-              <p><b>room code</b> {generate_room_code !== null && generate_room_code}</p>
-              { generate_room_code == null ? (
-                <div className="form-group">
-                  { join_room && (
-                    <input  
-                    type="text" 
-                    className='form-control' 
-                    placeholder='room_code' 
-                    name='join_room_code' 
-                    onKeyPress={this.gotoJoinRoom}
-                    onChange={this._onChange}/>
-                  ) }
-                  { generate_room_code == null ? (
-                    <input  
-                    type="text" 
-                    className='form-control' 
-                    placeholder='username' 
-                    name='username' 
-                    onKeyPress={this.handlePress}
-                    onChange={this._onChange}/>
-                  ) : null }
-                </div>
-              ) : null}
-              <div className="form-group">
-                <button className="btn btn-primary" onClick={this.submit}>create room</button>
-                <span style={{ 'margin' : 10 }}>or</span>
-                <button className="btn btn-secondary" onClick={this.joinRoom}>join room</button>
+    const { 
+      generate_room_code , 
+      join_room , 
+      users , 
+      isReady , 
+      socketId , 
+      inGame , 
+      isFinish , 
+      notificationText} = this.state
+
+    let waitingRoom = (
+      <div className="container">
+        <div className="row">
+          <div className="col-6">
+            <h1>Tesi aduh real</h1>
+            <p><b>room code</b> {generate_room_code !== null && generate_room_code}</p>
+            { generate_room_code == null ? (
+              <div className={generate_room_code == null ? "form-group" : "form-group hide"}>
+                { join_room && (
+                  <input  
+                  type="text" 
+                  className='form-control' 
+                  placeholder='room_code' 
+                  name='join_room_code' 
+                  onKeyPress={this.gotoJoinRoom}
+                  onChange={this._onChange}/>
+                ) }
+                { generate_room_code == null ? (
+                  <input  
+                  type="text" 
+                  className='form-control' 
+                  placeholder='username' 
+                  name='username' 
+                  onKeyPress={this.handlePress}
+                  onChange={this._onChange}/>
+                ) : null }
               </div>
+            ) : null}
+            <div className="form-group">
+              <button className="btn btn-primary" onClick={this.submit}>create room</button>
+              <span style={{ 'margin' : 10 }}>or</span>
+              <button className="btn btn-secondary" onClick={this.joinRoom}>join room</button>
             </div>
           </div>
+        
+          <div className="col-6">
+            <ListUsers 
+              users={users} 
+              onClick={this.userReady} 
+              onHostClick={this.userReady} 
+              disabled={isReady} 
+              socketId={socketId}/>
+          </div>
         </div>
-        <ListUsers 
-          users={users} 
-          onClick={this.userReady} 
-          onHostClick={this.userReady} 
-          disabled={isReady} 
-          socketId={socketId}/>
+      </div>
+    )
+    return (
+      <div>
+        { inGame ? <TypeRacer notification={isFinish} notificationText={notificationText} onFinished={this.onFinished} /> : waitingRoom }
       </div>
     )
   }
@@ -164,7 +205,6 @@ const ListUsers = ({users , onClick , onHostClick , disabled , socketId}) => {
                       ) }
                     </div>
                   ) }
-                  
                 </li>
               )) }
             </ul>
