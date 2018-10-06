@@ -20,41 +20,53 @@ app.get('/' , (req , res) => res.render('index'))
 
 server.listen(port , () => console.log(`Server listen on port ${port}`))
 
-function getClients(roomcode) {
-  let rooms = io.sockets.adapter.rooms[roomcode].sockets
-  let clients = []
-  for (let i in rooms) {
-    clients.push(io.sockets.adapter.nsp.connected[i])
-  }
-
-  return clients
-}
-
 function getClientsInRoom(roomCode , users) {
-  let rooms = io.sockets.adapter.rooms[roomCode].sockets
-  let peopleInRoom = []
-  let allusers = []
-  for (let i in rooms) {
-    peopleInRoom = [...Object.keys(rooms)]
-  } 
-  for (let i in peopleInRoom) {
-    allusers.push(users[peopleInRoom[i]])
+  if (io.sockets.adapter.rooms[roomCode]) {
+    let rooms = io.sockets.adapter.rooms[roomCode].sockets
+    let peopleInRoom = []
+    let allusers = []
+    for (let i in rooms) {
+      peopleInRoom = [...Object.keys(rooms)]
+    } 
+    for (let i in peopleInRoom) {
+      allusers.push(users[peopleInRoom[i]])
+    }
+  
+    return allusers
   }
-
-  return allusers
 }
+
 
 let users = {}
 
 io.on('connection' , socket => {
   users[socket.id] = {
+    socketId: socket.id ,
     username: null ,
     is_host: false ,
+    is_ready: false ,
     player: null ,
     is_join_room: false ,
     room_code: null 
   }
   console.log('users connected' , users)
+
+  socket.emit('send socketid' , {
+    socketId: socket.id
+  })
+
+  socket.on('is ready' , data => {
+    users[data.socketId].is_ready = true 
+    console.log('user ready' , users)
+    
+    let usertemp = getClientsInRoom(users[data.socketId].room_code , users)
+
+    io.in(users[data.socketId].room_code).emit('update state' , {
+      text: `${users[data.socketId].username} is ready...` ,
+      users: usertemp
+    })
+  })
+
 
   socket.on('create room' , data => {
     console.log(data)
@@ -67,8 +79,8 @@ io.on('connection' , socket => {
     socket.join(data.room_code)
     console.log(users)
     console.log('rooms' , io.sockets.adapter.rooms)
-    let people = getClients(data.room_code)
-    console.log(people)
+    // let people = getClients(data.room_code)
+    // console.log(people)
     let allrooms = io.sockets.adapter.rooms[data.room_code].sockets
     let allpeopleinroom = []
     let usertemp = getClientsInRoom(data.room_code , users)
@@ -80,6 +92,13 @@ io.on('connection' , socket => {
       users: usertemp
     })
   }) 
+
+  socket.on('all allready' , data => {
+    console.log(data)
+    io.in(data.roomCode).emit('ready to play' , {
+      text: 'all allready to play games'
+    })
+  })
 
   socket.on('join room' , data => {
     console.log(data)
@@ -111,12 +130,12 @@ io.on('connection' , socket => {
   socket.on('disconnect' , () => {
     console.log(`Users disconnect ${users[socket.id]}`)
     if (users[socket.id].is_join_room) {
-      socket.leave(users[socket.id].room_code)
       let usertemp = getClientsInRoom(users[socket.id].room_code , users)
       io.in(users[socket.id].room_code).emit('room created' , {
         text: 'room created',
         users: usertemp
       })
+      socket.leave(users[socket.id].room_code)
     }
     delete users[socket.id]
     console.log(users)

@@ -7,17 +7,39 @@ class App extends Component {
   constructor(props) {
    super(props) 
    this.state = {
+    socketId: null ,
     username: '' ,
     generate_room_code: null ,
     join_room: false ,
     join_room_code: '',
-    users: []
+    users: [] ,
+    isReady: false
    }
 
    this.socket = io()
-
    this.socket.on('room not found' , data => console.log(data))
    this.socket.on('room created' , data => this.onRoomCreated(data))
+   this.socket.on('send socketid' , data => this.setState({ socketId: data.socketId } , () => console.log(this.state)))
+   this.socket.on('update state' , data => this.updateStateRoom(data))
+   this.socket.on('ready to play' , data => console.log(data))
+  }
+
+  updateStateRoom = data => {
+    const { users } = this.state 
+    console.log(data)
+    this.setState({ users: [...data.users] } , () => console.log(this.state))
+    users.map((user , index) => {
+      console.log(user)
+      if (user.is_ready == true) {
+        console.log('all is allready to game')
+        this.socket.emit('all allready' , {
+          roomCode: this.state.generate_room_code || this.state.join_room_code ,
+          text: 'all users ready to play game'
+        })
+      } else {
+        console.log('user not ready all')
+      }
+    })
   }
 
   onRoomCreated = data => {
@@ -59,8 +81,18 @@ class App extends Component {
     }
   }
 
+  userReady = () => {
+    this.setState({ isReady: true } , () => {
+      this.socket.emit('is ready' , {
+        socketId: this.state.socketId ,
+        isReady: true
+      })
+    })
+  }
+
+
   render() {
-    const { generate_room_code , join_room , users } = this.state 
+    const { generate_room_code , join_room , users , isReady , socketId } = this.state 
     return (
       <div>
         <div className="container">
@@ -68,26 +100,28 @@ class App extends Component {
             <div className="col-6">
               <h1>Tesi aduh real</h1>
               <p><b>room code</b> {generate_room_code !== null && generate_room_code}</p>
-              <div className="form-group">
-                { join_room && (
-                  <input  
-                  type="text" 
-                  className='form-control' 
-                  placeholder='room_code' 
-                  name='join_room_code' 
-                  onKeyPress={this.gotoJoinRoom}
-                  onChange={this._onChange}/>
-                ) }
-                { generate_room_code == null ? (
-                  <input  
-                  type="text" 
-                  className='form-control' 
-                  placeholder='username' 
-                  name='username' 
-                  onKeyPress={this.handlePress}
-                  onChange={this._onChange}/>
-                ) : null }
-              </div>
+              { generate_room_code == null ? (
+                <div className="form-group">
+                  { join_room && (
+                    <input  
+                    type="text" 
+                    className='form-control' 
+                    placeholder='room_code' 
+                    name='join_room_code' 
+                    onKeyPress={this.gotoJoinRoom}
+                    onChange={this._onChange}/>
+                  ) }
+                  { generate_room_code == null ? (
+                    <input  
+                    type="text" 
+                    className='form-control' 
+                    placeholder='username' 
+                    name='username' 
+                    onKeyPress={this.handlePress}
+                    onChange={this._onChange}/>
+                  ) : null }
+                </div>
+              ) : null}
               <div className="form-group">
                 <button className="btn btn-primary" onClick={this.submit}>create room</button>
                 <span style={{ 'margin' : 10 }}>or</span>
@@ -96,22 +130,41 @@ class App extends Component {
             </div>
           </div>
         </div>
-        <ListUsers users={users} />
+        <ListUsers 
+          users={users} 
+          onClick={this.userReady} 
+          onHostClick={this.userReady} 
+          disabled={isReady} 
+          socketId={socketId}/>
       </div>
     )
   }
 }
 
-const ListUsers = ({users}) => {
+const ListUsers = ({users , onClick , onHostClick , disabled , socketId}) => {
   return (
     <div className='container'>
       <div className="row">
         <div className="col-4">
-          { users.length && (
+          { users.length !== 0 && (
             <ul>
               { users.map((user , index) => (
                 <li key={index}>
-                  { user.is_host ? (<b>{user.username}</b>) : user.username}
+                  { user.is_host ? (<b>{user.username}</b>) : user.username} <br/>
+                  { user.is_host ? (
+                    <div>
+                      { user.socketId == socketId && (
+                        <button className='btn btn-warning' onClick={onHostClick} disabled={disabled}>Start</button>
+                      ) }
+                    </div>
+                    ) : (
+                    <div>
+                      { user.socketId == socketId && (
+                        <button className='btn btn-info' onClick={onClick} disabled={disabled}>ready</button>
+                      ) }
+                    </div>
+                  ) }
+                  
                 </li>
               )) }
             </ul>

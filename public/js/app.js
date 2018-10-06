@@ -50416,6 +50416,27 @@ var App = function (_Component) {
 
     var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 
+    _this.updateStateRoom = function (data) {
+      var users = _this.state.users;
+
+      console.log(data);
+      _this.setState({ users: [].concat(_toConsumableArray(data.users)) }, function () {
+        return console.log(_this.state);
+      });
+      users.map(function (user, index) {
+        console.log(user);
+        if (user.is_ready == true) {
+          console.log('all is allready to game');
+          _this.socket.emit('all allready', {
+            roomCode: _this.state.generate_room_code || _this.state.join_room_code,
+            text: 'all users ready to play game'
+          });
+        } else {
+          console.log('user not ready all');
+        }
+      });
+    };
+
     _this.onRoomCreated = function (data) {
       _this.state.users = [].concat(_toConsumableArray(data.users));
       _this.setState({ users: _this.state.users }, function () {
@@ -50459,21 +50480,42 @@ var App = function (_Component) {
       }
     };
 
+    _this.userReady = function () {
+      _this.setState({ isReady: true }, function () {
+        _this.socket.emit('is ready', {
+          socketId: _this.state.socketId,
+          isReady: true
+        });
+      });
+    };
+
     _this.state = {
+      socketId: null,
       username: '',
       generate_room_code: null,
       join_room: false,
       join_room_code: '',
-      users: []
+      users: [],
+      isReady: false
     };
 
     _this.socket = (0, _socket2.default)();
-
     _this.socket.on('room not found', function (data) {
       return console.log(data);
     });
     _this.socket.on('room created', function (data) {
       return _this.onRoomCreated(data);
+    });
+    _this.socket.on('send socketid', function (data) {
+      return _this.setState({ socketId: data.socketId }, function () {
+        return console.log(_this.state);
+      });
+    });
+    _this.socket.on('update state', function (data) {
+      return _this.updateStateRoom(data);
+    });
+    _this.socket.on('ready to play', function (data) {
+      return console.log(data);
     });
     return _this;
   }
@@ -50484,7 +50526,9 @@ var App = function (_Component) {
       var _state = this.state,
           generate_room_code = _state.generate_room_code,
           join_room = _state.join_room,
-          users = _state.users;
+          users = _state.users,
+          isReady = _state.isReady,
+          socketId = _state.socketId;
 
       return _react2.default.createElement(
         'div',
@@ -50514,7 +50558,7 @@ var App = function (_Component) {
                 ' ',
                 generate_room_code !== null && generate_room_code
               ),
-              _react2.default.createElement(
+              generate_room_code == null ? _react2.default.createElement(
                 'div',
                 { className: 'form-group' },
                 join_room && _react2.default.createElement('input', {
@@ -50531,7 +50575,7 @@ var App = function (_Component) {
                   name: 'username',
                   onKeyPress: this.handlePress,
                   onChange: this._onChange }) : null
-              ),
+              ) : null,
               _react2.default.createElement(
                 'div',
                 { className: 'form-group' },
@@ -50554,7 +50598,12 @@ var App = function (_Component) {
             )
           )
         ),
-        _react2.default.createElement(ListUsers, { users: users })
+        _react2.default.createElement(ListUsers, {
+          users: users,
+          onClick: this.userReady,
+          onHostClick: this.userReady,
+          disabled: isReady,
+          socketId: socketId })
       );
     }
   }]);
@@ -50563,7 +50612,11 @@ var App = function (_Component) {
 }(_react.Component);
 
 var ListUsers = function ListUsers(_ref) {
-  var users = _ref.users;
+  var users = _ref.users,
+      onClick = _ref.onClick,
+      onHostClick = _ref.onHostClick,
+      disabled = _ref.disabled,
+      socketId = _ref.socketId;
 
   return _react2.default.createElement(
     'div',
@@ -50574,7 +50627,7 @@ var ListUsers = function ListUsers(_ref) {
       _react2.default.createElement(
         'div',
         { className: 'col-4' },
-        users.length && _react2.default.createElement(
+        users.length !== 0 && _react2.default.createElement(
           'ul',
           null,
           users.map(function (user, index) {
@@ -50585,7 +50638,26 @@ var ListUsers = function ListUsers(_ref) {
                 'b',
                 null,
                 user.username
-              ) : user.username
+              ) : user.username,
+              ' ',
+              _react2.default.createElement('br', null),
+              user.is_host ? _react2.default.createElement(
+                'div',
+                null,
+                user.socketId == socketId && _react2.default.createElement(
+                  'button',
+                  { className: 'btn btn-warning', onClick: onHostClick, disabled: disabled },
+                  'Start'
+                )
+              ) : _react2.default.createElement(
+                'div',
+                null,
+                user.socketId == socketId && _react2.default.createElement(
+                  'button',
+                  { className: 'btn btn-info', onClick: onClick, disabled: disabled },
+                  'ready'
+                )
+              )
             );
           })
         )
@@ -50623,9 +50695,9 @@ module.bundle.Module = Module;
 
 var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
-  var hostname = undefined || location.hostname;
+  var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '59213' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '58992' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
